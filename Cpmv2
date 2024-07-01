@@ -1,0 +1,30 @@
+Sub CalculateSchedule()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim maxF As Double
+    Dim minH As Double
+    
+    Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet's name
+    
+    ' Determine the last row with data in column A
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Calculate Early Start (E) and Early Finish (F)
+    For i = 2 To lastRow
+        If ws.Cells(i, 2).Value = "-" Then
+            ws.Cells(i, 5).Value = 0
+        Else
+            Dim prevActivities As Variant
+            prevActivities = Split(ws.Cells(i, 2).Value, ",")
+            
+            maxF = 0
+            Dim j As Variant
+            For Each j In prevActivities
+                Dim row As Long
+                On Error Resume Next
+                row = Application.WorksheetFunction.Match(CStr(j), ws.Columns(1), 0)
+                On Error GoTo 0
+                If row > 0 Then
+                    If ws.Cells(row, 6).Value > maxF Then
+                        maxF = ws.Cells(row, 6).Value
