@@ -1,0 +1,59 @@
+Sub CalculateSchedule()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim maxF As Double
+    Dim minH As Double
+    
+    Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet's name
+    
+    ' Determine the last row with data in column A
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Calculate Early Start (E) and Early Finish (F)
+    For i = 2 To lastRow
+        If ws.Cells(i, 2).Value = "-" Then
+            ws.Cells(i, 5).Value = 0
+        Else
+            Dim prevActivities As Variant
+            prevActivities = Split(ws.Cells(i, 2).Value, ",")
+            
+            maxF = 0
+            Dim j As Variant
+            For Each j In prevActivities
+                Dim row As Long
+                row = Application.WorksheetFunction.Match(CLng(j), ws.Columns(1), 0)
+                If ws.Cells(row, 6).Value > maxF Then
+                    maxF = ws.Cells(row, 6).Value
+                End If
+            Next j
+            ws.Cells(i, 5).Value = maxF
+        End If
+        ws.Cells(i, 6).Value = ws.Cells(i, 5).Value + ws.Cells(i, 4).Value
+    Next i
+    
+    ' Calculate Late Finish (H) for the last activity
+    ws.Cells(lastRow, 8).Value = ws.Cells(lastRow, 6).Value
+    
+    ' Calculate Late Start (G) and Late Finish (H) in reverse
+    For i = lastRow - 1 To 2 Step -1
+        If ws.Cells(i, 3).Value = "-" Then
+            ws.Cells(i, 8).Value = ws.Cells(i + 1, 8).Value
+        Else
+            Dim nextActivities As Variant
+            nextActivities = Split(ws.Cells(i, 3).Value, ",")
+            
+            minH = ws.Cells(Application.WorksheetFunction.Match(CLng(nextActivities(0)), ws.Columns(1), 0), 8).Value
+            Dim k As Variant
+            For Each k In nextActivities
+                Dim nextRow As Long
+                nextRow = Application.WorksheetFunction.Match(CLng(k), ws.Columns(1), 0)
+                If ws.Cells(nextRow, 8).Value < minH Then
+                    minH = ws.Cells(nextRow, 8).Value
+                End If
+            Next k
+            ws.Cells(i, 8).Value = minH
+        End If
+        ws.Cells(i, 7).Value = ws.Cells(i, 8).Value - ws.Cells(i, 4).Value
+    Next i
+End Sub
