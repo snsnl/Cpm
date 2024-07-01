@@ -28,3 +28,40 @@ Sub CalculateSchedule()
                 If row > 0 Then
                     If ws.Cells(row, 6).Value > maxF Then
                         maxF = ws.Cells(row, 6).Value
+                    End If
+                End If
+            Next j
+            ws.Cells(i, 5).Value = maxF
+        End If
+        ws.Cells(i, 6).Value = ws.Cells(i, 5).Value + ws.Cells(i, 4).Value
+    Next i
+    
+    ' Calculate Late Finish (H) for the last activity
+    ws.Cells(lastRow, 8).Value = ws.Cells(lastRow, 6).Value
+    
+    ' Calculate Late Start (G) and Late Finish (H) in reverse
+    For i = lastRow - 1 To 2 Step -1
+        If ws.Cells(i, 3).Value = "-" Then
+            ws.Cells(i, 8).Value = ws.Cells(i + 1, 8).Value
+        Else
+            Dim nextActivities As Variant
+            nextActivities = Split(ws.Cells(i, 3).Value, ",")
+            
+            minH = ws.Cells(Application.WorksheetFunction.Match(CStr(nextActivities(0)), ws.Columns(1), 0), 8).Value
+            Dim k As Variant
+            For Each k In nextActivities
+                Dim nextRow As Long
+                On Error Resume Next
+                nextRow = Application.WorksheetFunction.Match(CStr(k), ws.Columns(1), 0)
+                On Error GoTo 0
+                If nextRow > 0 Then
+                    If ws.Cells(nextRow, 8).Value < minH Then
+                        minH = ws.Cells(nextRow, 8).Value
+                    End If
+                End If
+            Next k
+            ws.Cells(i, 8).Value = minH
+        End If
+        ws.Cells(i, 7).Value = ws.Cells(i, 8).Value - ws.Cells(i, 4).Value
+    Next i
+End Sub
